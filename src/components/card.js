@@ -7,15 +7,11 @@ import { formatDate } from '../filters';
 const CardWrapper = styled('div')`
   display: flex;
   flex-direction: column;
-  width: 260px;
+  width: 220px;
 
   @media (max-width: 1024px) {
     margin-bottom: 3rem;
   }
-`;
-
-const EventInfo = styled('div')`
-  padding: 2rem 0;
 `;
 
 const ImgWrapper = styled('div')``;
@@ -25,6 +21,7 @@ const TalkDescription = styled('span')`
   word-wrap: break-word;
   width: 345px;
   align-self: center;
+  margin-bottom: 0.5rem;
 `;
 
 const TalkTitle = styled('span')`
@@ -39,28 +36,34 @@ const TalkLink = styled('a')`
   color: #cb067a;
 `;
 
-// TODO - make these interchangeable
-// <Tag type={talk.eventType} />
-// background-color: type === 'meetup' ? #db0606 : #ddaa03;
-const MeetupTag = styled('span')`
-  background-color: #db0606;
+const Tag = styled('span')`
+  background-color: ${props =>
+    props.type === 'meetup' ? '#db0606' : '#ddaa03'};
   color: #fff;
   font-size: 10px;
   height: 12px;
   align-self: center;
   padding: 0.2rem;
-  margin-top: 0.6rem;
+  margin: 0 0.5rem;
 `;
 
-const ConferenceTag = styled('span')`
-  background-color: #ddaa03;
-  color: #fff;
-  font-size: 10px;
-  height: 12px;
-  align-self: center;
-  padding: 0.2rem;
-  margin-top: 0.6rem;
+const EventInfo = styled('div')`
+  padding: 0.25rem 0;
+  white-space: wrap;
+  margin: 0.25rem 0;
 `;
+
+const EventDetail = ({ event }) => {
+  const { eventDate, eventName, eventType } = event;
+  return (
+    <EventInfo>
+      <Tag type={eventType}>{eventType.toUpperCase()}</Tag>
+      <span>
+        {eventName} －{formatDate(eventDate)}
+      </span>
+    </EventInfo>
+  );
+};
 
 const Card = ({ talk }) => (
   <CardWrapper>
@@ -71,15 +74,13 @@ const Card = ({ talk }) => (
         <img src={talk.previewImg} alt={`${talk.title} slide preview`} />
       </ImgWrapper>
     )}
-    {talk.eventType === 'meetup' ? (
-      <MeetupTag>MEETUP</MeetupTag>
+
+    {talk.event.length > 1 ? (
+      talk.event.map(e => <EventDetail event={e} key={e.eventDate} />)
     ) : (
-      <ConferenceTag>CONFERENCE</ConferenceTag>
+      <EventDetail event={talk.event[0]} />
     )}
-    <EventInfo>
-      <span>{talk.eventName} － </span>
-      <span>{formatDate(talk.eventDate)}</span>
-    </EventInfo>
+
     {talk.hostedSlidesUrl && (
       <TalkLink
         href={talk.hostedSlidesUrl}
@@ -90,6 +91,7 @@ const Card = ({ talk }) => (
         </span>
       </TalkLink>
     )}
+
     {talk.recordedPresentationUrl && (
       <TalkLink
         href={talk.recordedPresentationUrl}
@@ -107,9 +109,13 @@ Card.propTypes = {
   talk: PropTypes.shape({
     title: PropTypes.string.isRequired,
     description: PropTypes.string.isRequired,
-    eventDate: PropTypes.string.isRequired,
-    eventName: PropTypes.string,
-    eventType: PropTypes.string,
+    event: PropTypes.arrayOf(
+      PropTypes.shape({
+        eventDate: PropTypes.string.isRequired,
+        eventName: PropTypes.string,
+        eventType: PropTypes.string
+      })
+    ).isRequired,
     exportedSlidesUrl: PropTypes.string.isRequired,
     hostedSlidesUrl: PropTypes.string.isRequired,
     previewImg: PropTypes.string,
